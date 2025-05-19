@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tailwind Class Extractor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      /* Animation keyframes */
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      .theme-transition {
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+      }
+
+      .loader {
+        animation: spin 1s linear infinite;
+      }
+
+      .float-animation {
+        animation: float 3s ease-in-out infinite;
+      }
+
+      /* Hide scrollbar but allow scrolling */
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+  </head>
+  <body
+    class="theme-transition min-h-screen flex items-center justify-center font-sans p-6"
+    id="app-body"
+  >
+    <div
+      class="theme-transition relative shadow-xl rounded-3xl p-8 w-full max-w-xl space-y-6"
+      id="app-container"
+    >
+      <!-- Theme Toggle -->
+      <div class="absolute top-4 right-4">
+        <button
+          id="themeToggle"
+          class="p-2 rounded-full theme-transition"
+          aria-label="Toggle Theme"
+        >
+          <i class="fa-solid fa-moon text-lg" id="themeIcon"></i>
+        </button>
+      </div>
+
+      <!-- Logo and Title -->
+      <div class="flex flex-col items-center space-y-3">
+        <div class="float-animation h-20 w-20 relative">
+          <svg viewBox="0 0 100 100" class="h-full w-full">
+            <defs>
+              <linearGradient
+                id="logoGradient"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="100%"
+              >
+                <stop
+                  offset="0%"
+                  class="theme-transition"
+                  id="gradient-start"
+                />
+                <stop
+                  offset="100%"
+                  class="theme-transition"
+                  id="gradient-end"
+                />
+              </linearGradient>
+            </defs>
+            <path
+              d="M50,10 L90,30 L90,70 L50,90 L10,70 L10,30 Z"
+              fill="url(#logoGradient)"
+              stroke-width="2"
+              class="theme-transition"
+              id="logo-stroke"
+            />
+            <text
+              x="50"
+              y="58"
+              font-size="24"
+              text-anchor="middle"
+              font-weight="bold"
+              class="theme-transition"
+              id="logo-text"
+            >
+              Anter
+            </text>
+          </svg>
+        </div>
+        <h1
+          class="text-3xl font-bold theme-transition text-center"
+          id="app-title"
+        >
+          Tailwind Class Extractor
+        </h1>
+      </div>
+
+      <!-- Input Section -->
+      <div class="space-y-2">
+        <label class="flex items-center" for="input-area">
+          <i class="fa-solid fa-code mr-2 theme-transition" id="input-icon"></i>
+          <span class="text-sm font-medium theme-transition" id="input-label"
+            >Paste your HTML class attribute:</span
+          >
+        </label>
+        <div class="relative">
+          <textarea
+            id="input"
+            rows="4"
+            placeholder='Paste something like class="text-gray-600 font-roboto text-sm font-normal"'
+            class="theme-transition w-full p-4 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 shadow-sm hover:shadow-md"
+            id="input-area"
+          ></textarea>
+          <button
+            id="clearBtn"
+            class="absolute top-2 right-2 p-1 rounded-full opacity-60 hover:opacity-100 theme-transition"
+            aria-label="Clear Input"
+          >
+            <i class="fa-solid fa-times text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Output Section -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="flex items-center" for="input-area">
+            <i
+              class="fa-solid fa-paint-brush mr-2 theme-transition"
+              id="output-icon"
+            ></i>
+            <span class="text-sm font-medium theme-transition" id="output-label"
+              >Extracted Tailwind classes:</span
+            >
+          </label>
+          <span
+            id="classCount"
+            class="text-xs theme-transition px-2 py-1 rounded-full"
+            id="class-count"
+            >0 classes</span
+          >
+        </div>
+        <div id="loading" class="hidden justify-center items-center py-4">
+          <i
+            class="fa-solid fa-circle-notch loader text-2xl theme-transition"
+            id="loader-icon"
+          ></i>
+        </div>
+        <div
+          id="output"
+          class="theme-transition w-full font-mono text-sm rounded-xl p-4 min-h-[70px] overflow-x-auto whitespace-pre-wrap select-all shadow-inner hide-scrollbar"
+        ></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-4">
+        <button
+          id="extractBtn"
+          class="theme-transition flex-1 py-3 px-5 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 ease-in-out shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>
+          Extract Classes
+        </button>
+        <button
+          id="copyBtn"
+          class="theme-transition flex-1 py-3 px-5 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 ease-in-out shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <i class="fa-solid fa-clipboard mr-2"></i>
+          Copy
+        </button>
+      </div>
+
+      <!-- Credit -->
+      <div class="text-center mt-6">
+        <p class="text-xs opacity-60 theme-transition" id="footer-text">
+          Made with <i class="fa-solid fa-heart text-red-500"></i> for My Dad
+          (Ahmed Anter)
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // Theme handling
+      const themeToggle = document.getElementById("themeToggle");
+      const themeIcon = document.getElementById("themeIcon");
+      const html = document.documentElement;
+      const body = document.getElementById("app-body");
+      const container = document.getElementById("app-container");
+      const gradientStart = document.getElementById("gradient-start");
+      const gradientEnd = document.getElementById("gradient-end");
+      const logoStroke = document.getElementById("logo-stroke");
+      const logoText = document.getElementById("logo-text");
+
+      // DOM elements
+      const input = document.getElementById("input");
+      const output = document.getElementById("output");
+      const copyBtn = document.getElementById("copyBtn");
+      const extractBtn = document.getElementById("extractBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const loading = document.getElementById("loading");
+      const classCount = document.getElementById("classCount");
+
+      // Initialize theme
+      let isDarkMode = window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      ).matches;
+      setTheme(isDarkMode);
+
+      // Theme toggle
+      themeToggle.addEventListener("click", () => {
+        isDarkMode = !isDarkMode;
+        setTheme(isDarkMode);
+      });
+
+      function setTheme(isDark) {
+        if (isDark) {
+          // Dark mode
+          body.classList.remove(
+            "bg-gradient-to-br",
+            "from-[#EBF4F6]",
+            "to-white"
+          );
+          body.classList.add(
+            "bg-gradient-to-br",
+            "from-gray-900",
+            "to-gray-800",
+            "text-white"
+          );
+
+          container.classList.remove("bg-white");
+          container.classList.add("bg-gray-800", "border", "border-gray-700");
+
+          themeIcon.classList.remove("fa-moon");
+          themeIcon.classList.add("fa-sun", "text-yellow-300");
+
+          input.classList.remove(
+            "bg-gray-50",
+            "border-gray-300",
+            "text-gray-800"
+          );
+          input.classList.add(
+            "bg-gray-700",
+            "border-gray-600",
+            "text-white",
+            "placeholder-gray-400"
+          );
+
+          output.classList.remove(
+            "bg-[#F4FBFC]",
+            "text-[#088395]",
+            "border-[#37B7C3]"
+          );
+          output.classList.add(
+            "bg-gray-700",
+            "text-emerald-300",
+            "border-gray-600"
+          );
+
+          extractBtn.classList.remove(
+            "bg-[#088395]",
+            "text-white",
+            "hover:bg-[#066b77]"
+          );
+          extractBtn.classList.add(
+            "bg-emerald-600",
+            "text-white",
+            "hover:bg-emerald-700"
+          );
+
+          copyBtn.classList.remove(
+            "bg-[#088395]",
+            "text-white",
+            "hover:bg-[#066b77]"
+          );
+          copyBtn.classList.add(
+            "bg-gray-700",
+            "text-white",
+            "hover:bg-gray-600"
+          );
+
+          gradientStart.setAttribute("stop-color", "#10B981");
+          gradientEnd.setAttribute("stop-color", "#059669");
+          logoStroke.setAttribute("stroke", "#374151");
+          logoText.setAttribute("fill", "#FFFFFF");
+
+          classCount.classList.remove("bg-[#F4FBFC]", "text-[#088395]");
+          classCount.classList.add("bg-gray-700", "text-emerald-300");
+        } else {
+          // Light mode
+          body.classList.remove(
+            "bg-gradient-to-br",
+            "from-gray-900",
+            "to-gray-800",
+            "text-white"
+          );
+          body.classList.add("bg-gradient-to-br", "from-[#EBF4F6]", "to-white");
+
+          container.classList.remove(
+            "bg-gray-800",
+            "border",
+            "border-gray-700"
+          );
+          container.classList.add("bg-white");
+
+          themeIcon.classList.remove("fa-sun", "text-yellow-300");
+          themeIcon.classList.add("fa-moon", "text-gray-700");
+
+          input.classList.remove(
+            "bg-gray-700",
+            "border-gray-600",
+            "text-white",
+            "placeholder-gray-400"
+          );
+          input.classList.add("bg-gray-50", "border-gray-300", "text-gray-800");
+
+          output.classList.remove(
+            "bg-gray-700",
+            "text-emerald-300",
+            "border-gray-600"
+          );
+          output.classList.add(
+            "bg-[#F4FBFC]",
+            "text-[#088395]",
+            "border-[#37B7C3]"
+          );
+
+          extractBtn.classList.remove(
+            "bg-emerald-600",
+            "text-white",
+            "hover:bg-emerald-700"
+          );
+          extractBtn.classList.add(
+            "bg-[#088395]",
+            "text-white",
+            "hover:bg-[#066b77]"
+          );
+
+          copyBtn.classList.remove(
+            "bg-gray-700",
+            "text-white",
+            "hover:bg-gray-600"
+          );
+          copyBtn.classList.add(
+            "bg-[#088395]",
+            "text-white",
+            "hover:bg-[#066b77]"
+          );
+
+          gradientStart.setAttribute("stop-color", "#088395");
+          gradientEnd.setAttribute("stop-color", "#37B7C3");
+          logoStroke.setAttribute("stroke", "#E5E7EB");
+          logoText.setAttribute("fill", "#374151");
+
+          classCount.classList.remove("bg-gray-700", "text-emerald-300");
+          classCount.classList.add("bg-[#F4FBFC]", "text-[#088395]");
+        }
+      }
+
+      // Extract classes function
+      function extractClasses(text) {
+        const regex = /class=["']([^"']*)["']/;
+        const match = text.match(regex);
+
+        if (!match) return "";
+
+        const classString = match[1].trim();
+        const classes = classString.split(/\s+/).filter(Boolean);
+
+        // Update class count
+        classCount.textContent = `${classes.length} classes`;
+
+        return classes.join(" ");
+      }
+
+      // Show loading animation
+      function showLoading() {
+        loading.classList.remove("hidden");
+        loading.classList.add("flex");
+        output.classList.add("opacity-0");
+
+        setTimeout(() => {
+          loading.classList.add("hidden");
+          loading.classList.remove("flex");
+          output.classList.remove("opacity-0");
+        }, 600);
+      }
+
+      // Input event handler
+      input.addEventListener("input", () => {
+        if (input.value.trim() === "") {
+          output.textContent = "";
+          classCount.textContent = "0 classes";
+        }
+      });
+
+      // Extract button click handler
+      extractBtn.addEventListener("click", () => {
+        if (!input.value.trim()) return;
+
+        showLoading();
+        setTimeout(() => {
+          output.textContent = extractClasses(input.value);
+        }, 500);
+      });
+
+      // Copy button click handler
+      copyBtn.addEventListener("click", () => {
+        const text = output.textContent;
+        if (!text) return;
+
+        navigator.clipboard.writeText(text).then(() => {
+          const originalText = copyBtn.innerHTML;
+          copyBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Copied!';
+
+          setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+          }, 1500);
+        });
+      });
+
+      // Clear button click handler
+      clearBtn.addEventListener("click", () => {
+        input.value = "";
+        output.textContent = "";
+        classCount.textContent = "0 classes";
+      });
+    </script>
+  </body>
+</html>
